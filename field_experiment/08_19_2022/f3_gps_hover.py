@@ -82,7 +82,7 @@ def finishWaypoints():
 
 def armingCall():
 	print("\n----------armingCall----------")
-	rospy.wait_for_service("mavros/cmd/arming")
+	rospy.wait_for_service("/mavros/cmd/arming")
 	uav_arm = rospy.ServiceProxy("/mavros/cmd/arming", CommandBool)
 	resp = uav_arm(1)
 	rospy.sleep(5)
@@ -110,6 +110,27 @@ def switch_modes(current_mode, next_mode): # current_mode: int, next_mode: str (
 	rospy.sleep(5)
 	return
 
+# ##################################
+# # basic modes from MAV_MODE
+# uint8 MAV_MODE_PREFLIGHT = 0
+# uint8 MAV_MODE_STABILIZE_DISARMED = 80
+# uint8 MAV_MODE_STABILIZE_ARMED = 208
+# uint8 MAV_MODE_MANUAL_DISARMED = 64
+# uint8 MAV_MODE_MANUAL_ARMED = 192
+# uint8 MAV_MODE_GUIDED_DISARMED = 88
+# uint8 MAV_MODE_GUIDED_ARMED = 216
+# uint8 MAV_MODE_AUTO_DISARMED = 92
+# uint8 MAV_MODE_AUTO_ARMED = 220
+# uint8 MAV_MODE_TEST_DISARMED = 66
+# uint8 MAV_MODE_TEST_ARMED = 194
+# ##################################3
+
+def land_call(lat, long, alt):
+	print("\n----------land_call----------")
+	land = rospy.ServiceProxy("/mavros/cmd/land", CommandTOL)
+	resp = land(0,0,lat,long, alt)
+	rospy.sleep(5)
+	return
 
 
 def main():
@@ -122,56 +143,27 @@ def main():
 	
 	armingCall()	
 
-	# switch_modes(208, "guided")
+	# # Take off command for simulation
+	# takeoff_call(47.3977419, 8.5455938, 5)
 
-	# Take off command through service call
-	takeoff_call(47.3977415, 8.5455952, 5)
+	# Take off command 
+	takeoff_call(latitude, longitude, 5)
 	
-	# Sending waypoints_push
-	waypoints = [
-		Waypoint(frame = 3, command = 16, is_current = 0, autocontinue = True, param1 = 5, x_lat = 47.3977415, y_long = 8.5455952, z_alt = 5),
-		Waypoint(frame = 3, command = 16, is_current = 1, autocontinue = True, param1 = 5, x_lat = 47.3977425, y_long = 8.5455952, z_alt = 10)
-	]
+	# # Take off command inside F3 cage
+	# takeoff_call(38.973593863069446, -76.92190286766103, 1)
 
-	# print(waypoints)
-	pushingWaypoints(waypoints) # Pushes waypoints to UAV
+	# Hover
+	rospy.sleep(10)
 
-	switch_modes(216, "auto.mission")
+	# Land
+	land_call(latitude, longitude, 0)
 
-	# TEST3
-	finishWaypoints() # Checks if waypoints are finished
-	# clear_pull() # Logistic house keeping
-
-	# TEST4
-	waiting_ugv(47.3977425, 8.5458982, 5) # Checks if ugv is at lat long
-	
-	# TEST5
-	# while True:
-	# 	rospy.sleep(2)
-	# 	print("Waiting for UAV to be close to next takeoff point")
-	# 	if (latitude-37.1973420)<0.0001 and (longitude-(-80.5798929))<0.0001 and (altitude-529)<2:
-	# 		# TODO: Check if this works
-	# 		# Take off command through service call
-	# 		takeoff = rospy.ServiceProxy("/mavros/cmd/takeoff", CommandTOL)
-	# 		res = takeoff(0, 0, 37.1973420, -80.5798929, 10)
-
-	# 		waypoints = [
-	# 			Waypoint(frame = 3, command = 16, is_current = 1, autocontinue = True, param1 = 5, x_lat = 37.1973420, y_long = -80.5798929, z_alt = 10),
-	# 			Waypoint(frame = 3, command = 16, is_current = 0, autocontinue = True, param1 = 5, x_lat = 37.1972726, y_long = -80.5799733, z_alt = 5),
-	# 			Waypoint(frame = 3, command = 16, is_current = 0, autocontinue = True, param1 = 5, x_lat = 37.1971499, y_long = -80.5801173, z_alt = 5)
-	# 		]
-	# 		pushingWaypoints(waypoints)
-	# 		break
-
-	# TEST6
-	# finishWaypoints() # Checks if waypoints are finished
-	# clear_pull() # Logistic house keeping
-	# waiting_ugv(37.1971499, -80.5801173, 0) # Checks if ugv is there yet
+	# # Land inside F3 cage
+	# land_call(38.973593863069446, -76.92190286766103, 0)
 	
 	# DONE
 	print("EVERYTHING WORKED AS PLANNED!!!")
 	rospy.spin()
-
 
 if __name__ == '__main__':
 	main()
