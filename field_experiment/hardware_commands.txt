@@ -1,0 +1,9 @@
+Run in docker
+
+voxl-docker -i roskinetic-xenial:v1.0
+
+cd yoctohome
+
+source/opt/ros/kinetic/setup.bash
+
+

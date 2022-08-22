@@ -1,0 +1,15 @@
+From computer to m500 drone --
+
+scp offboard_takeoff_hover.py root@192.168.8.1:/home/root
+
+From m500 to computer --
+
+scp <rosbag_file> experiment@192.168.8.21:/home/experiment/uav_ugv_nav_repo/field_experiment
+
+
+scp root@192.168.8.1:/offboard_fly_y.py experiment@192.168.8.21:/home/experiment
+
+
+scp root@192.168.8.1:/data/bagfiles/<rosbag_file(s)> experiment@192.168.8.21:/home/experiment
+
+scp root@192.168.8.1:/data/bagfiles/<rosbag_file(s)> /home/experiment
