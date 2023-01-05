@@ -112,13 +112,11 @@ def land_call(lat, long, alt):
 	return
 
 def tag_callback(msg):
-    # for i in range(10):
-	# print("I am in callback..")
 	global tag_det
 	global tag_det_id
 
 	if not msg.detections:
-		print("No Tag Detected!!!!!!")
+		print("-------------No Tag Detected!-------------------")
 		tag_det = False
 	else:
         # print("-------------Tag Detected!--------------")
@@ -233,6 +231,8 @@ def main():
     ]
 
     # print(waypoints)
+
+    # Navigate through waypoints:-
     pushingWaypoints(waypoints3) # Pushes waypoints to UAV
 
     #switch_modes(216, "auto.mission")
@@ -240,6 +240,7 @@ def main():
 
     # TEST3
     finishWaypoints() # Checks if waypoints are finished
+    
     # clear_pull() # Logistic house keeping
 
     # Hover

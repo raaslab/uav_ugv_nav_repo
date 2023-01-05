@@ -1,6 +1,0 @@
-To view m500 Tracking Camera image feed:
-
-1. Run "roslaunch voxl_mpa_to_ros voxl_mpa_to_ros.launch" inside the drone but outside the docker.
-2. Then visualize using RQT by running this command in new terminal: 
-"rqt_image_view".
-
