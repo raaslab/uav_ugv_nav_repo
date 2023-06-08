@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch send_UAV_waypoints.py -->
+  <node name="setpoint_node" pkg="arl" type="run_arm_and_offboard.py" output="screen">
+  </node>
+  <node name="uav_waypoint" pkg="arl" type="send_uav.py" output="screen">
+  </node>
+
+  <!-- Launch Send_UGV_waypoints.py -->
+  <node name="ugv_waypoint" pkg="arl" type="send_ugv.py" output="screen" >
+  </node>
+</launch>
+
