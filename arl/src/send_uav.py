@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped,Point
 from std_msgs.msg import String
 import numpy as np
+from math import sqrt
 
 rospy.set_param('/ugv_goal_reached', False)  # Initialize the UGV goal reached parameter
 
@@ -28,9 +29,10 @@ rospy.set_param('/ugv_goal_reached', False)  # Initialize the UGV goal reached p
 def uav_goal_callback(msg):
     # Callback function to receive UGV's goal status
     goal_status = msg.data
-
+    print("Received goal status:", goal_status)
     if goal_status == "reached":
         rospy.set_param('/ugv_goal_reached', True)
+        print("UAV received 'reached' status from UGV")
     elif goal_status =="in progress":
         rospy.set_param('/ugv_goal_reached', False)
 
@@ -39,7 +41,7 @@ def uav_waypoint():
     uav_goal_pub = rospy.Publisher('/uav_goal_status', String, queue_size=10)
     ugv_goal_sub = rospy.Subscriber('/ugv_goal_status', String, uav_goal_callback)
     uav_position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
-    origin = np.array([0,0,0])
+    #origin = np.array([0,0,0])
     # Specify the three goal positions
     # goals = [
         
@@ -47,9 +49,9 @@ def uav_waypoint():
     #     apply_transform(Point(2, 2, 2), origin),
     #     apply_transform(Point(3, 3, 2), origin)
     # ]
-    goals = [(2, 0, 2), (3, 2, 2), (5, 3, 2)]
+    goals = [(5, -2, 3), (8, -2, 3), (10, -2, 3)]
 
-    rate = rospy.Rate(10)  # 10 Hz
+    rate = rospy.Rate(20)  # 10 Hz
 
     for goal in goals:
         # Move UAV to the current goal position
@@ -62,28 +64,24 @@ def uav_waypoint():
 
             # Continuously publish goal status
             uav_goal_pub.publish("in progress")
+            
                         # Check if UAV has reached its own goal position
             uav_position = rospy.wait_for_message('/mavros/local_position/pose', PoseStamped).pose.position
-            if abs(uav_position.x - goal[0]) < 0.1 and abs(uav_position.y - goal[1]) < 0.1:
+            print("UAV_position:{}".format(uav_position))
+            distance_to_goal = sqrt((uav_position.x-goal[0])**2 +(uav_position.y - goal[1])**2)
+            print("********************distance to goal is {}".format(distance_to_goal))
+            if distance_to_goal < 0.5:
+                            # Publish goal status as "reached"
+                uav_goal_pub.publish("reached")
+                rospy.loginfo("UAV reached goal: %s", str(goal))
+                while not rospy.get_param('/ugv_goal_reached'):
+                                    # Check if UGV's goal status indicates it has reached the current goal position
+                    rospy.sleep(0.1)
+                break
+            rospy.sleep(0.5)
 
-
-                # Check if UGV's goal status indicates it has reached the current goal position
-                ugv_goal_status = rospy.get_param('/ugv_goal_reached')
-                # If so, break the loop and proceed to the next goal
-                if ugv_goal_status:
-                    break
-
-            #wait for some time
-            rospy.sleep(1.0)
-
-        # Check if UAV has reached its own goal position
-        uav_position = rospy.wait_for_message('/mavros/local_position/pose', PoseStamped).pose.position
-        if abs(uav_position.x - goal[0]) < 0.1 and abs(uav_position.y - goal[1]) < 0.1:
-            
-            # Publish goal status as "reached"
-            uav_goal_pub.publish("reached")
-            rospy.loginfo("UAV reached goal: %s", str(goal))
         rate.sleep()
+
 
 def create_pose(x, y, z):
     pose = PoseStamped()
