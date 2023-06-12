@@ -47,7 +47,8 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
         ugv_velocity_pub.publish(create_twist(0.0, 0.1))
     elif distance_to_goal > 0.2:
         # Move towards the goal
-        ugv_velocity_pub.publish(create_twist(0.8, 0.0))
+        velocity = distance_to_goal * 0.8  # Adjust the scaling factor as desired
+        ugv_velocity_pub.publish(create_twist(velocity, 0.0))
     else:
         # Stop
         ugv_velocity_pub.publish(create_twist(0.0, 0.0))
