@@ -47,7 +47,7 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
         ugv_velocity_pub.publish(create_twist(0.0, 0.1))
     elif distance_to_goal > 0.2:
         # Move towards the goal
-        ugv_velocity_pub.publish(create_twist(1.0, 0.0))
+        ugv_velocity_pub.publish(create_twist(0.8, 0.0))
     else:
         # Stop
         ugv_velocity_pub.publish(create_twist(0.0, 0.0))
@@ -93,8 +93,8 @@ def ugv_waypoint():
         # Move UGV to the current goal position
         while not rospy.is_shutdown():
             # Publish UGV's current velocity
-            ugv_velocity_pub.publish(create_twist(0.5, 1.0))
-            rospy.loginfo("Published UGV velocity: Linear=%.2f, Angular=%.2f", 0.1, 1.0)
+            ugv_velocity_pub.publish(create_twist(0.8, 0.1))
+            rospy.loginfo("Published UGV velocity: Linear=%.2f, Angular=%.2f", 0.8, 0.1)
             
             # Continuously publish goal status
             ugv_goal_pub.publish("in progress")

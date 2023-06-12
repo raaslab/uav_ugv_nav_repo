@@ -77,16 +77,24 @@ def land_call(lat, long, alt):
 	rospy.sleep(5)
 	return
 
-def setOffboardMode(self):
-	rospy.wait_for_service('mavros/set_mode')
-	try:
-		flightModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
-		flightModeService(custom_mode='OFFBOARD')
-	except (rospy.ServiceException):
-		print ("service set_mode call failed: %s. Offboard Mode could not be set.")
-	rospy.sleep(10)
+# def setOffboardMode(self):
+# 	rospy.wait_for_service('mavros/set_mode')
+# 	try:
+# 		flightModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
+# 		flightModeService(custom_mode='OFFBOARD')
+# 	except (rospy.ServiceException):
+# 		print ("service set_mode call failed: %s. Offboard Mode could not be set.")
+# 	rospy.sleep(10)
 		
-		
+def setOffboardMode():
+    rospy.wait_for_service('/mavros/set_mode')
+    try:
+        flightModeService = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+        resp = flightModeService(custom_mode='OFFBOARD')
+        rospy.loginfo("Offboard mode set")
+    except rospy.ServiceException as e:
+        print("Service call failed: {0}".format(e))
+			
 # =======================================================================================
 class Controller:
     # initialization method
@@ -143,7 +151,24 @@ def main():
 		rate.sleep()
 		k=k+1
 	
-	setOffboardMode(self=True)
+	setOffboardMode()
+	# setOffboardMode(self=True)
+	uav_goal_pub = rospy.Publisher('/uav_goal_status', String, queue_size=10)
+    
+	while not rospy.is_shutdown():
+		# Publish UAV goal status as "reached" if the UAV reaches its current goal
+		if cnt.sp.position.x == 5 and cnt.sp.position.y == 5:
+			uav_goal_pub.publish("reached")
+		
+		# Check if UGV's goal status indicates it has reached the current goal position
+		ugv_goal_status = rospy.get_param('/ugv_goal_reached')
+		
+		if ugv_goal_status:
+			break
+		
+		rate.sleep()
+
+
 	rospy.spin()
 
 	# switch_modes(208, "OFFBOARD")

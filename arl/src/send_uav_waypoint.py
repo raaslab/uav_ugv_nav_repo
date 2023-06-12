@@ -126,7 +126,8 @@ def apply_transform(goal_position, drone_position):
 def goal_reached_callback(msg):
     global goal_reached
     if msg.data:
-        # Handle goal reached event
+        goal_reached = True
+        
         pass
 # def ugv_cmd_vel_callback(msg):
 #     global ugv_started_moving
@@ -155,7 +156,7 @@ def send_uav_waypoint():
     # rospy.loginfo("UGV and UAV started together!")
     # List of goal positions
     goal_positions = [
-        apply_transform(Point(0, 0, 2), origin),
+        #SSapply_transform(Point(0, 0, 2), origin),
         apply_transform(Point(10, 10, 2), origin),  # Apply transformation for UAV goal position
         apply_transform(Point(3, 2, 2), origin),
         apply_transform(Point(10, 4, 2), origin)

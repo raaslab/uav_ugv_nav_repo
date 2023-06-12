@@ -5,7 +5,7 @@ from geometry_msgs.msg import PoseStamped,Point
 from std_msgs.msg import String
 import numpy as np
 from math import sqrt
-
+FLIGHT_ALTITUDE=3
 rospy.set_param('/ugv_goal_reached', False)  # Initialize the UGV goal reached parameter
 
 # def apply_transform(goal_position, drone_position):
@@ -70,7 +70,7 @@ def uav_waypoint():
             print("UAV_position:{}".format(uav_position))
             distance_to_goal = sqrt((uav_position.x-goal[0])**2 +(uav_position.y - goal[1])**2)
             print("********************distance to goal is {}".format(distance_to_goal))
-            if distance_to_goal < 0.5:
+            if distance_to_goal < 0.4:
                             # Publish goal status as "reached"
                 uav_goal_pub.publish("reached")
                 rospy.loginfo("UAV reached goal: %s", str(goal))
@@ -87,7 +87,7 @@ def create_pose(x, y, z):
     pose = PoseStamped()
     pose.pose.position.x = x
     pose.pose.position.y = y
-    pose.pose.position.z = z
+    pose.pose.position.z = FLIGHT_ALTITUDE
     return pose
 
 if __name__ == '__main__':
