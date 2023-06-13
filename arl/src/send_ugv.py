@@ -88,7 +88,7 @@ def ugv_waypoint():
 
     ugv_position_sub = rospy.Subscriber('/odometry/filtered', Odometry, lambda msg: ugv_position_callback(msg, goals,ugv_velocity_pub,ugv_goal_pub))
 
-    rate = rospy.Rate(0.20)  # 10 Hz
+    rate = rospy.Rate(0.20)  # 5 Hz
 
     for goal in goals:
         # Move UGV to the current goal position
@@ -114,6 +114,7 @@ def ugv_waypoint():
         
         # Add a delay between iterations to control the publishing frequency
         rospy.sleep(5.0)
+    
     rate.sleep()
 
 def create_twist(linear_x, angular_z):
