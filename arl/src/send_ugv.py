@@ -31,7 +31,6 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
 
     ugv_position = msg.pose.pose.position
     print("UGV current position: x={}, y={}, z={}".format(ugv_position.x, ugv_position.y, ugv_position.z))
-    
     goal = goals[current_goal_index]
     rot_q = msg.pose.pose.orientation
     (roll, pitch, theta) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
@@ -68,8 +67,8 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
 
         current_goal_index += 1  # Update the current goal index
         uav_goal_status = False  # Reset the UAV goal status
-        if current_goal_index == len(goals) -1 and uav_goal_status:
-            current_goal_index = 0
+        if current_goal_index >= len(goals) and uav_goal_status:
+           # current_goal_index = 0
             rospy.loginfo("UGV reached the last goal. Shutting down...")
             rospy.signal_shutdown("UGV reached the last goal")
 
