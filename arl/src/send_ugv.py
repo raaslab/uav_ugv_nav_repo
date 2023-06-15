@@ -38,11 +38,11 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
     inc_x = goal[0] - ugv_position.x
     inc_y = goal[1] - ugv_position.y
     print("current_goal_index:", current_goal_index)
-    print("goals:", goals)
+    # print("goals:", goals)
     angle_to_goal = atan2(inc_y, inc_x)
     distance_to_goal = sqrt(inc_x ** 2 + inc_y ** 2)
-    print("#########angle_to_goal:{}".format(angle_to_goal))
-    print("#########theta:{}".format(theta))
+    # print("#########angle_to_goal:{}".format(angle_to_goal))
+    # print("#########theta:{}".format(theta))
     if abs(angle_to_goal - theta) > 0.3:
         # Rotate towards the goal
         ugv_velocity_pub.publish(create_twist(0.0, 0.8))
@@ -56,7 +56,7 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
 
     # Print the goal position
     print("###############Current Goal: x={}, y={}".format(goal[0], goal[1]))
-    print("********************UGV distance to goal is: {}".format(distance_to_goal))
+    print("***************UGV distance to goal is: {}".format(distance_to_goal))
 
     # Check if UGV has reached the goal position
     if sqrt((ugv_position.x - goal[0]) ** 2 + (ugv_position.y - goal[1]) ** 2) < 0.5:
