@@ -8,7 +8,7 @@ from mavros_msgs.srv import *
 from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import Point, PoseStamped
-
+import re
 # Global variables
 latitude = 0.0
 longitude = 0.0
@@ -92,24 +92,24 @@ class Controller:
         self.sp.position.y = 0.0
 
 
-def main():
-    rospy.init_node('multi_uav_setpoint_node', anonymous=True)
+def main(uav_id):
+    rospy.init_node('multi_uav_setpoint_node_' + str(uav_id), anonymous=True)
     cnt = Controller()
     rate = rospy.Rate(20.0)
     sp_pubs = []
-    uav_ids = [1, 2]  # List of UAV IDs
+    #uav_ids = [1, 2]  # List of UAV IDs
 
     # Create publishers for setpoints
-    for uav_id in uav_ids:
-        sp_pubs.append(rospy.Publisher('/uav{}/mavros/setpoint_raw/local'.format(uav_id), PositionTarget, queue_size=1))
+    
+    sp_pubs.append(rospy.Publisher('/uav{}/mavros/setpoint_raw/local'.format(uav_id), PositionTarget, queue_size=1))
 
     # Arm all UAVs
-    for uav_id in uav_ids:
-        armingCall(uav_id)
+    
+    armingCall(uav_id)
 
     # Switch all UAVs to OFFBOARD mode
-    for uav_id in uav_ids:
-        switch_modes(uav_id, 208, "OFFBOARD")
+    
+    switch_modes(uav_id, 208, "OFFBOARD")
 
     # Wait for a common trigger message to start all UAVs together
     rospy.wait_for_message('/start_uavs', String)
@@ -123,13 +123,16 @@ def main():
         k = k + 1
 
     # Set OFFBOARD mode for all UAVs simultaneously
-    for uav_id in uav_ids:
-        setOffboardMode(uav_id)
-
-    rospy.spin()
-
+    
+    setOffboardMode(uav_id)
 
     rospy.spin()
 
 if __name__ == '__main__':
-    main()
+    node_name = rospy.get_name()  # Get the full node name
+    
+    match = re.search(r'\d+', node_name)
+    uav_id = match.group()
+    print(uav_id)
+    print(node_name)
+    main(uav_id)
