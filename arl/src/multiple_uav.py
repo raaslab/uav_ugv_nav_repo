@@ -34,7 +34,6 @@ def uav_waypoint(uav_id):
     ugv_goal_sub = rospy.Subscriber('/ugv_goal_status', String, uav_goal_callback)
     uav_position_pub = rospy.Publisher('/uav' + str(uav_id) + '/mavros/setpoint_position/local', PoseStamped, queue_size=10)
     state_sub = rospy.Subscriber("/uav" + str(uav_id) + "/mavros/state", State, state_callback)
-
     arming_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/arming", CommandBool)
     landing_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/land", CommandTOL)
     set_mode_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/set_mode", SetMode)

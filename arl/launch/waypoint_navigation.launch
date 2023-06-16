@@ -1,12 +1,9 @@
-
-
 <?xml version="1.0"?>
 <launch>
 
   
   <group ns="uav1">
-  <!-- <param name="wait_time" value="2.0" /> -->
-   <node name="uav_waypoint1" pkg="arl" type="multiple_uav.py" output="screen" >
+   <node name="uav_waypoint" pkg="arl" type="multiple_uav.py" output="screen" >
    </node>
     <node name="multi_uav_setpoint_node" pkg="arl" type="run_arm_offboard_multiple.py" output="screen">
       <param name="uav_id" value="1" />
@@ -14,8 +11,8 @@
   </group>
 
   <group ns="uav2">
-    <node name="uav_waypoint2" pkg="arl" type="multiple_uav.py" output="screen" >
-    </node>
+   <node name="uav_waypoint" pkg="arl" type="multiple_uav.py" output="screen" >
+   </node>
     <node name="multi_uav_setpoint_node" pkg="arl" type="run_arm_offboard_multiple.py" output="screen">
       <param name="uav_id" value="2" />
     </node>
@@ -23,10 +20,9 @@
   
     <!-- Launch send_UAV_waypoints.py -->
 
-  <!-- <node name="multi_uav_setpoint_node_2" pkg="arl" type="run_arm_offboard_multiple.py" output="screen">
-  </node> -->
-  <!-- <node name="ugv_waypoint" pkg="arl" type="ugv_move_and_rendezvous.py" output="screen" >
-  </node> -->
+
+  <node name="ugv_waypoint" pkg="arl" type="ugv_move_and_rendezvous.py" output="screen" >
+  </node>
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find arl)/rviz/rviz_tmp_odom.rviz"/>
   <node pkg="tf" type="static_transform_publisher" name="odom_world_transform" args="0 0 0 0 0 0 /world /odom 10"/>
   <node pkg="tf" type="static_transform_publisher" name="map_world_transform" args="0 2 0 0 0 0 /world /map 10"/>

@@ -16,7 +16,6 @@ altitude = 0.0
 last_waypoint = False
 
 def globalPosition_callback(data):
-    # print("\n----------globalPosition_callback----------")
     global latitude
     global longitude
     global altitude
@@ -53,7 +52,6 @@ def takeoff_call(uav_id, lat, long, alt):
     return
 
 def switch_modes(uav_id, current_mode, next_mode):
-    # current_mode: int, next_mode: str (http://docs.ros.org/jade/api/mavros_msgs/html/srv/SetMode.html)
     print("\n----------switch_modes----------")
     rospy.wait_for_service("/uav{}/mavros/set_mode".format(uav_id))
     modes = rospy.ServiceProxy("/uav{}/mavros/set_mode".format(uav_id), SetMode)
@@ -95,19 +93,16 @@ class Controller:
 def main(uav_id):
     rospy.init_node('multi_uav_setpoint_node_' + str(uav_id), anonymous=True)
 
-    # Arm all UAVs
-    
+    # Arm all UAVs   
     armingCall(uav_id)
 
-    # Switch all UAVs to OFFBOARD mode
-    
+    # Switch all UAVs to OFFBOARD mode    
     switch_modes(uav_id, 208, "OFFBOARD")
 
     # Wait for a common trigger message to start all UAVs together
     rospy.wait_for_message('/start_uavs', String)
 
     # Set OFFBOARD mode for all UAVs simultaneously
-    
     setOffboardMode(uav_id)
 
     rospy.spin()
