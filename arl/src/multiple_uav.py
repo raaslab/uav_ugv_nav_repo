@@ -9,9 +9,9 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandTOL, SetMode, SetModeRequest
 from transformation import apply_transform
 from uav_goals import get_uav_goals
-
+import re
 ugv_goal_status = False
-uav_goal_pubs = []
+uav_goal_pub = None
 
 def uav_goal_callback(msg):
     # Callback function to receive UGV's goal status
@@ -30,7 +30,7 @@ def state_callback(msg):
     current_state = msg
 
 def uav_waypoint(uav_id):
-    rospy.init_node('uav_waypoint' + str(uav_id), anonymous=True)
+    rospy.init_node('uav_waypoint', anonymous=True)
     ugv_goal_sub = rospy.Subscriber('/ugv_goal_status', String, uav_goal_callback)
     uav_position_pub = rospy.Publisher('/uav' + str(uav_id) + '/mavros/setpoint_position/local', PoseStamped, queue_size=10)
     state_sub = rospy.Subscriber("/uav" + str(uav_id) + "/mavros/state", State, state_callback)
@@ -38,8 +38,6 @@ def uav_waypoint(uav_id):
     arming_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/arming", CommandBool)
     landing_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/land", CommandTOL)
     set_mode_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/set_mode", SetMode)
-
-    
 
     global ugv_goal_status
 
@@ -61,7 +59,7 @@ def uav_waypoint(uav_id):
             rospy.loginfo("Published UAV position: %s", str(goal_position))
 
             # Continuously publish goal status
-            uav_goal_pubs[uav_id].publish("in progress")
+            uav_goal_pub.publish("in progress")
 
             # Check if UAV has reached its own goal position
             uav_position = rospy.wait_for_message('/uav' + str(uav_id) + '/mavros/local_position/pose', PoseStamped).pose.position
@@ -71,11 +69,10 @@ def uav_waypoint(uav_id):
             if distance_to_goal < 0.4:
                 # Publish goal status as "reached"
                 if goal_type == "regular":
-                    uav_goal_pubs[uav_id-1].publish("reached")
+                    uav_goal_pub.publish("reached")
                     rospy.loginfo("UAV %d reached goal: %s", uav_id, str(goal_position))
-
                 elif goal_type == "rendezvous":
-                    uav_goal_pubs[uav_id-1].publish("rendezvous_reached")
+                    uav_goal_pub.publish("rendezvous_reached")
                     rospy.loginfo("UAV %d published 'rendezvous_reached' status", uav_id)
                     rospy.wait_for_service('/uav' + str(uav_id) + '/mavros/cmd/arming')
                     try:
@@ -122,13 +119,13 @@ def create_pose(x, y, z):
     return pose
 
 if __name__ == '__main__':
-    num_uavs = 2  # Specify the number of UAVs
-    uav_goal_pubs = [rospy.Publisher('/uav_goal_status/uav' + str(i), String, queue_size=10) for i in range(1, num_uavs+1)]
+    node_name = rospy.get_name()  # Get the full node name    
+    match = re.search(r'\d+', node_name)
+    uav_id = int(match.group())
+    uav_goal_pub = rospy.Publisher('/uav_goal_status/uav' + str(uav_id), String, queue_size=10)
     try:
-        for uav_id in range(1, num_uavs+1):
-            goals = get_uav_goals(uav_id)
-            # uav_goal_pub = rospy.Publisher('/uav_goal_status/uav' + str(uav_id), String, queue_size=10)
-            # uav_goal_pubs.append(uav_goal_pub)
-            uav_waypoint(uav_id)
+        goals = get_uav_goals(uav_id)
+        uav_waypoint(uav_id)
     except rospy.ROSInterruptException:
         pass
+

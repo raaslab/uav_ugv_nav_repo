@@ -130,9 +130,6 @@ def main(uav_id):
 
 if __name__ == '__main__':
     node_name = rospy.get_name()  # Get the full node name
-    
     match = re.search(r'\d+', node_name)
     uav_id = match.group()
-    print(uav_id)
-    print(node_name)
     main(uav_id)
