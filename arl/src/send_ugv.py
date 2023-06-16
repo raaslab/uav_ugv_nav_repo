@@ -9,20 +9,20 @@ from math import atan2, sqrt
 ugv_goal_pub = rospy.Publisher('/ugv_goal_status', String, queue_size=10)
 rospy.set_param('/uav_goal_reached', False)  # Initialize the UAV goal reached parameter
 current_goal_index = 0
-uav_goal_status = False  # Initialize the UAV goal status
+uav_goal_status = {}
 
-# Callback function to receive UAV's goal status
-def ugv_goal_callback(msg):
-    global uav_goal_status  # Update the global uav_goal_status variable
+def ugv_goal_callback(msg, uav_id):
+    global uav_goal_status
     goal_status = msg.data
     print("Received goal status:", goal_status)
-    if goal_status == "rendezvous_reached":
+    if goal_status.startswith("rendezvous_reached") and goal_status.endswith(str(uav_id)):
         rospy.set_param('/uav_goal_reached', True)
-        print("UGV received 'reached' status from UAV")
-        uav_goal_status = True  # Set the UAV goal status to True
+        print("UGV received 'reached' status from UAV", uav_id)
+        uav_goal_status[uav_id] = True
     elif goal_status == "reached" or goal_status == "in progress":
         rospy.set_param('/uav_goal_reached', False)
-        uav_goal_status = False  # Set the UAV goal status to False
+        uav_goal_status[uav_id] = False
+
 
 # Callback function to receive UGV's position
 def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
@@ -65,11 +65,12 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
 
         if goal_type == "rendezvous":
             # Wait for UAV to reach the goal position
-            while not uav_goal_status:
+            rendezvous_uav_id = goal[4]
+            while not uav_goal_status[rendezvous_uav_id]:
                 rospy.sleep(0.1)
 
             # Reset the UAV goal status
-            uav_goal_status = False
+            uav_goal_status[rendezvous_uav_id] = False
             ugv_goal_pub.publish("rendezvous_reached") 
 
         current_goal_index += 1  # Update the current goal index
@@ -85,11 +86,17 @@ def ugv_waypoint():
     global uav_goal_status
     rospy.init_node('ugv_waypoint', anonymous=True)
     
-    uav_goal_sub = rospy.Subscriber('/uav_goal_status', String, ugv_goal_callback)
+    uav_ids = [1, 2]  # UAV IDs
+    uav_goal_subs = []
+    for uav_id in uav_ids:
+        topic = '/uav_goal_status/uav{}'.format(uav_id)
+        uav_goal_sub = rospy.Subscriber(topic, String, lambda msg, uav_id=uav_id: ugv_goal_callback(msg, uav_id))
+        uav_goal_subs.append(uav_goal_sub)
+
     ugv_velocity_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
     # Specify the three goal positions with types
-    goals = [(5, 0,0, "regular"), (10, 0,0, "rendezvous"),(15, 0,0, "regular"),(20, 0,0, "rendezvous")]
+    goals = [(5, 0,0, "regular"), (10, 0,0, "rendezvous",1),(15, 0,0, "regular"),(20, 0,0, "rendezvous",2)]
 
     ugv_position_sub = rospy.Subscriber('/odometry/filtered', Odometry, lambda msg: ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub))
 
@@ -142,3 +149,4 @@ if __name__ == '__main__':
         ugv_waypoint()
     except rospy.ROSInterruptException:
         pass
+

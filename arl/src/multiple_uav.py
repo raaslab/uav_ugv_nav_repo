@@ -10,17 +10,18 @@ from mavros_msgs.srv import CommandBool, CommandTOL, SetMode, SetModeRequest
 from transformation import apply_transform
 from uav_goals import get_uav_goals
 import re
+rospy.set_param('/ugv_goal_reached', False)  # Initialize the UGV goal reached parameter
 ugv_goal_status = False
 uav_goal_pub = None
 
-def uav_goal_callback(msg):
+def uav_goal_callback(msg, uav_id):
     # Callback function to receive UGV's goal status
     global ugv_goal_status
     goal_status = msg.data
     print("Received goal status:", goal_status)
     if goal_status == "rendezvous_reached":
         rospy.set_param('/ugv_goal_reached', True)
-        print("UAV received 'reached' status from UGV")
+        print("UAV", uav_id, "received 'rendezvous_reached' status from UGV")
         ugv_goal_status = True  # Set a global variable to track the UGV's goal status
     elif goal_status == "reached" or goal_status == "in progress":
         rospy.set_param('/ugv_goal_reached', False)
@@ -31,9 +32,10 @@ def state_callback(msg):
 
 def uav_waypoint(uav_id):
     rospy.init_node('uav_waypoint', anonymous=True)
-    ugv_goal_sub = rospy.Subscriber('/ugv_goal_status', String, uav_goal_callback)
+    ugv_goal_sub = rospy.Subscriber('/ugv_goal_status', String, lambda msg, uav_id=uav_id: uav_goal_callback(msg, uav_id))
     uav_position_pub = rospy.Publisher('/uav' + str(uav_id) + '/mavros/setpoint_position/local', PoseStamped, queue_size=10)
     state_sub = rospy.Subscriber("/uav" + str(uav_id) + "/mavros/state", State, state_callback)
+
     arming_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/arming", CommandBool)
     landing_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/cmd/land", CommandTOL)
     set_mode_service = rospy.ServiceProxy("/uav" + str(uav_id) + "/mavros/set_mode", SetMode)
@@ -71,7 +73,7 @@ def uav_waypoint(uav_id):
                     uav_goal_pub.publish("reached")
                     rospy.loginfo("UAV %d reached goal: %s", uav_id, str(goal_position))
                 elif goal_type == "rendezvous":
-                    uav_goal_pub.publish("rendezvous_reached")
+                    uav_goal_pub.publish("rendezvous_reached"+str(uav_id))
                     rospy.loginfo("UAV %d published 'rendezvous_reached' status", uav_id)
                     rospy.wait_for_service('/uav' + str(uav_id) + '/mavros/cmd/arming')
                     try:
