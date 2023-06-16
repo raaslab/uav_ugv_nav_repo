@@ -94,14 +94,6 @@ class Controller:
 
 def main(uav_id):
     rospy.init_node('multi_uav_setpoint_node_' + str(uav_id), anonymous=True)
-    cnt = Controller()
-    rate = rospy.Rate(20.0)
-    sp_pubs = []
-    #uav_ids = [1, 2]  # List of UAV IDs
-
-    # Create publishers for setpoints
-    
-    sp_pubs.append(rospy.Publisher('/uav{}/mavros/setpoint_raw/local'.format(uav_id), PositionTarget, queue_size=1))
 
     # Arm all UAVs
     
@@ -113,14 +105,6 @@ def main(uav_id):
 
     # Wait for a common trigger message to start all UAVs together
     rospy.wait_for_message('/start_uavs', String)
-
-    k = 0
-    while k < 10:
-        # Publish setpoints for all UAVs simultaneously
-        for sp_pub in sp_pubs:
-            sp_pub.publish(cnt.sp)
-        rate.sleep()
-        k = k + 1
 
     # Set OFFBOARD mode for all UAVs simultaneously
     
