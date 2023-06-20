@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
+from ugv_goals import get_ugv_goals
 from math import atan2, sqrt
 ugv_goal_pub = rospy.Publisher('/ugv_goal_status', String, queue_size=10)
 rospy.set_param('/uav_goal_reached', False)  # Initialize the UAV goal reached parameter
@@ -30,19 +31,16 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
     global uav_goal_status  # Add this line to access the global uav_goal_status variable
 
     ugv_position = msg.pose.pose.position
-    print("UGV current position: x={}, y={}, z={}".format(ugv_position.x, ugv_position.y, ugv_position.z))
+    #print("UGV current position: x={}, y={}, z={}".format(ugv_position.x, ugv_position.y, ugv_position.z))
     goal = goals[current_goal_index]
     goal_type = goal[3]  # Get the type of the current goal
     rot_q = msg.pose.pose.orientation
     (roll, pitch, theta) = euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])
     inc_x = goal[0] - ugv_position.x
     inc_y = goal[1] - ugv_position.y
-    print("current_goal_index:", current_goal_index)
-    # print("goals:", goals)
     angle_to_goal = atan2(inc_y, inc_x)
     distance_to_goal = sqrt(inc_x ** 2 + inc_y ** 2)
-    # print("#########angle_to_goal:{}".format(angle_to_goal))
-    # print("#########theta:{}".format(theta))
+
     if abs(angle_to_goal - theta) > 0.3:
         # Rotate towards the goal
         ugv_velocity_pub.publish(create_twist(0.0, 0.8))
@@ -50,20 +48,13 @@ def ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub):
         # Move towards the goal
         velocity = distance_to_goal * 0.8  # Adjust the scaling factor as desired
         ugv_velocity_pub.publish(create_twist(velocity, 0.0))
-    # else:
-    #     # Stop
-    #     ugv_velocity_pub.publish(create_twist(0.0, 0.0))
-
-    # Print the goal position
-    print("###############Current Goal: x={}, y={}".format(goal[0], goal[1]))
-    print("***************UGV distance to goal is: {}".format(distance_to_goal))
 
     # Check if UGV has reached the goal position
     if sqrt((ugv_position.x - goal[0]) ** 2 + (ugv_position.y - goal[1]) ** 2) < 0.5:
         rospy.set_param('/ugv_goal_reached', True)
         ugv_goal_pub.publish("reached")  # Publish goal status as "reached"
 
-        if goal_type == "rendezvous":
+        if goal_type == "rv":
             # Wait for UAV to reach the goal position
             rendezvous_uav_id = goal[4]
             while not uav_goal_status[rendezvous_uav_id]:
@@ -96,8 +87,8 @@ def ugv_waypoint():
     ugv_velocity_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
     # Specify the three goal positions with types
-    goals = [(5, 0,0, "regular"), (10, 0,0, "rendezvous",1),(15, 0,0, "regular"),(20, 0,0, "rendezvous",2)]
-
+    goals = get_ugv_goals()
+    
     ugv_position_sub = rospy.Subscriber('/odometry/filtered', Odometry, lambda msg: ugv_position_callback(msg, goals, ugv_velocity_pub, ugv_goal_pub))
 
     rate = rospy.Rate(0.20)  # 5 Hz
@@ -113,21 +104,15 @@ def ugv_waypoint():
             ugv_goal_pub.publish("in progress")
             
             # Check if the goal type is "rendezvous"
-            if goal[3] == "rendezvous":
+            if goal[3] == "rv":
                 # Wait for some time
                 while not rospy.get_param('/uav_goal_reached'):
                     rospy.sleep(0.1)
 
                 ugv_goal_pub.publish("rendezvous_reached")
-                # Check if UAV's goal status indicates it has reached the current goal position
-                # If so, break the loop and proceed to the next goal
-
-                
             # Check if the goal type is "regular"
-            if goal[3] == "regular":
+            if goal[3] == "wp":
                 break
-            
-            #rate.sleep()  # Control the publishing frequency
 
         rospy.loginfo("UGV reached goal: %s", str(goal))
         # Publish goal status as "reached"

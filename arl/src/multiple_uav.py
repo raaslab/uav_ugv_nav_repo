@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 import rospy
-from geometry_msgs.msg import PoseStamped, Point
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
-import numpy as np
 from math import sqrt
 from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandTOL, SetMode, SetModeRequest
-from transformation import apply_transform
 from uav_goals import get_uav_goals
 import re
 rospy.set_param('/ugv_goal_reached', False)  # Initialize the UGV goal reached parameter
@@ -45,7 +43,7 @@ def uav_waypoint(uav_id):
     rate = rospy.Rate(20)  # 10 Hz
 
     goals = get_uav_goals(uav_id)
-
+    
     for goal in goals:
         goal_position = goal["position"]
         goal_type = goal["type"]
@@ -66,13 +64,13 @@ def uav_waypoint(uav_id):
             uav_position = rospy.wait_for_message('/uav' + str(uav_id) + '/mavros/local_position/pose', PoseStamped).pose.position
             distance_to_goal = sqrt((uav_position.x - goal_position.x) ** 2 + (uav_position.y - goal_position.y) ** 2)
 
-            print("Distance to goal is:", distance_to_goal)
+            #print("Distance to goal is:", distance_to_goal)
             if distance_to_goal < 0.4:
                 # Publish goal status as "reached"
-                if goal_type == "regular":
+                if goal_type == "wp":
                     uav_goal_pub.publish("reached")
                     rospy.loginfo("UAV %d reached goal: %s", uav_id, str(goal_position))
-                elif goal_type == "rendezvous":
+                elif goal_type == "rv":
                     uav_goal_pub.publish("rendezvous_reached"+str(uav_id))
                     rospy.loginfo("UAV %d published 'rendezvous_reached' status", uav_id)
                     rospy.wait_for_service('/uav' + str(uav_id) + '/mavros/cmd/arming')
