@@ -75,20 +75,6 @@ def setOffboardMode(uav_id):
         print("service set_mode call failed: %s. Offboard Mode could not be set.")
     rospy.sleep(10)
 
-class Controller:
-    def __init__(self):
-        self.state = State()
-        self.sp = PositionTarget()
-        self.sp.type_mask = int('010111111000', 2)
-        self.sp.coordinate_frame = 1
-        self.ALT_SP = 3.0
-        self.sp.position.z = self.ALT_SP
-        self.STEP_SIZE = 2.0
-        self.FENCE_LIMIT = 5.0
-        self.local_pos = Point(0.0, 0.0, 3.0)
-        self.sp.position.x = 0.0
-        self.sp.position.y = 0.0
-
 
 def main(uav_id):
     rospy.init_node('multi_uav_setpoint_node_' + str(uav_id), anonymous=True)
@@ -111,4 +97,5 @@ if __name__ == '__main__':
     node_name = rospy.get_name()  # Get the full node name
     match = re.search(r'\d+', node_name)
     uav_id = match.group()
+    #uav_id=2
     main(uav_id)

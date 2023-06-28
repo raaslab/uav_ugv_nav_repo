@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from geometry_msgs.msg import Point
 from transformation import apply_transform
-
+FLIGHT_ALTITUDE =2
 def parse_uav_goals(file_path):
     goals = []
     with open(file_path, 'r') as file:
@@ -33,7 +33,7 @@ def get_uav_goals(uav_id):
     origin = [0, 0, 0]  # Define the origin for transformations
     transformed_goals = []
     for goal in goals:
-        position = apply_transform(Point(goal['x'], goal['y'], 3), origin)
+        position = apply_transform(Point(goal['x'], goal['y'], FLIGHT_Altitude), origin)
         transformed_goal = {
             'position': position,
             'type': goal['type']
