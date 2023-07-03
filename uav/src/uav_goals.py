@@ -19,12 +19,12 @@ def parse_uav_goals(file_path):
 
 def get_uav_goals(uav_id):
     if uav_id == 1:
-        uav_goals_file = '/root/yoctohome/uav_test/src/uav/src/uav1_goals.txt'
+        uav_goals_file = 'uav1_goals.txt'
         #uav_goals_file = '/home/experiment/uav_test/src/uav/src/uav1_goals.txt'
     elif uav_id == 2:
-        uav_goals_file = '/root/yoctohome/uav_test/src/uav/src/uav2_goals.txt'
+        uav_goals_file = 'uav2_goals.txt'
     elif uav_id == 3:
-        uav_goals_file = '/root/yoctohome/uav_test/src/uav/src/uav3_goals.txt'
+        uav_goals_file = 'uav3_goals.txt'
     else:
         return []
 

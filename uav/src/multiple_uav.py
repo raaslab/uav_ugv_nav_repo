@@ -37,6 +37,7 @@ def publish_uav_position(uav_id, position):
 
 
 def publish_uav_goal_status(uav_id, status):
+    global uav_goal_publisher
     topic = '/uav_goal_status/uav' + str(uav_id)
     uav_goal_publisher = rospy.Publisher(topic, String, queue_size=10)
     uav_goal_publisher.publish(status)
