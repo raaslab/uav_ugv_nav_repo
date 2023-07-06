@@ -1,0 +1,30 @@
+ssh root@192.168.78.165
+oelinux123
+voxl-docker -i uav:latest
+cd yoctohome/
+source my_ros_env_dronelab.sh
+cd uav_test/src/uav/src/
+./run_mavros_dronelab.sh
+
+ssh root@192.168.78.165
+oelinux123
+docker ps
+voxl exec -it abc /bin/bash
+cd yoctohome
+source my_ros_env_dronelab.sh
+cd uav_test/src/uav/src/
+python2 run_arm_offboard_multiple.py
+
+ssh root@192.168.78.165
+oelinux123
+docker ps
+voxl exec -it abc /bin/bash
+cd yoctohome
+source my_ros_env_dronelab.sh
+cd uav_test/src/uav/src/
+python2 multiple.py
+
+ssh root@192.168.78.165
+oelinux123
+cd /mnt/sdcard/
+roslaunch rosbag.launch

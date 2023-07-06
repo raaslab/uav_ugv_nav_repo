@@ -1,0 +1,24 @@
+voxl-docker -i uav:latest
+cd yoctohome/
+source f3.sh
+cd uav_test/src/uav/src/
+./run_mavros_dronelab.sh
+
+
+docker ps
+voxl exec -it abc /bin/bash
+cd yoctohome
+source f3.sh
+cd uav_test/src/uav/src/
+python2 run_arm_offboard_multiple.py
+
+
+docker ps
+voxl exec -it abc /bin/bash
+cd yoctohome
+source f3.sh
+cd uav_test/src/uav/src/
+python2 multiple.py
+
+cd /mnt/sdcard/
+roslaunch rosbag.launch

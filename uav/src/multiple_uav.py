@@ -101,7 +101,7 @@ def waypoint_navigation(uav_id):
     rate = rospy.Rate(20)  # 10 Hz
     
     goals = get_uav_goals(uav_id)
-    takeoff(uav_id,2)
+    takeoff(uav_id,1.5)
     
     #land(uav_id,0)
     for goal in goals:
@@ -120,17 +120,25 @@ def waypoint_navigation(uav_id):
             
             if distance_to_goal < 0.4:
                 if goal_type == "rv":
-                    #handle_rendezvous_goal(uav_id, goal_position)
-                    land(uav_id,0)
-                    #handle_hover(uav_id)
+                    handle_rendezvous_goal(uav_id, goal_position)
+                    # takeoff(uav_id,1)
+                    # takeoff(uav_id,1.5)
+                    # land(uav_id,0)
+                    #handle_hover(uav_id,duration=200)
                 else:
                     publish_uav_goal_status(uav_id, "reached")
                     #handle_hover(uav_id)
                     rospy.loginfo("UAV " + str(uav_id) + " reached goal: " + str(goal_position))
-                break
-	
+                break            
+            #rospy.set_param('/ugv_goal_reached', False)
+
             rate.sleep()
     land(uav_id,0)
+
+def get_dist(pos1, pos2):
+    return sqrt((pos1.x - pos2.x) ** 2 + 
+                (pos1.y - pos2.y) ** 2+
+                (pos1.z - pos2.z) ** 2)
 
         
 def takeoff(uav_id,ALT):
@@ -147,20 +155,21 @@ def takeoff(uav_id,ALT):
             take_off_position.z = ALT  # Update the desired takeoff altitude
         except rospy.ROSInterruptException:
             pass
+
+    # First take off to the desired altitude
+    rospy.loginfo("Taking off to UAV position: " + str(take_off_position))
     while not rospy.is_shutdown():
-        #print(current_state)
-        if current_state is not None and current_state.mode == 'OFFBOARD':
-            
-            if current_pose is not None:
-                #print("hover initiate")
-                publish_uav_position(uav_id,take_off_position)
-        #check distance b/w current_pose.pose.position and take_off_position     
-        # continue if distance is less that threshold. 
-        if sqrt((take_off_position.x - current_pose.pose.position.x) ** 2 + 
-                (take_off_position.y - current_pose.pose.position.y) ** 2+
-                (take_off_position.z - current_pose.pose.position.z) ** 2)< 0.2:
+        publish_uav_position(uav_id,take_off_position)
+        if get_dist(take_off_position, current_pose.pose.position) < 0.2:
             break
-        rate.sleep() 
+        rate.sleep()
+
+    # now hover for the desired amount of time
+    rospy.loginfo("Hovering")
+    for i in range(400):
+        publish_uav_position(uav_id,take_off_position)
+        rate.sleep()
+    
 
 def land(uav_id, ALT):
     rospy.loginfo("UAV %d landing status", uav_id)
@@ -177,38 +186,27 @@ def land(uav_id, ALT):
     
     rate = rospy.Rate(20)  # 20 Hz update rate
     
+    # First take off to the desired altitude
+    rospy.loginfo("Landing to UAV position: " + str(landing_position))
     while not rospy.is_shutdown():
-        if current_state is not None and current_state.mode == 'OFFBOARD':
-            if current_pose is not None:
-                publish_uav_position(uav_id, landing_position)
-        
-         #Check distance between current pose and landing position
-        distance_to_landing = sqrt((landing_position.x - current_pose.pose.position.x) ** 2 +
-                                    (landing_position.y - current_pose.pose.position.y) ** 2 +
-                                   (landing_position.z - current_pose.pose.position.z) ** 2)
-        
-         #Exit the loop if the UAV has reached the landing position
-        if distance_to_landing < 0.2:
+        publish_uav_position(uav_id,landing_position)
+        if get_dist(landing_position, current_pose.pose.position) < 0.1:
             break
-             #arming(uav_id, False)
-        
         rate.sleep()
 
-def handle_hover(uav_id):
-    # Start the main loop
- 
-    rate = rospy.Rate(20) # 20 Hz update rate
-    pose_msg=PoseStamped()
-    rospy.loginfo("UAV %d hover status", uav_id)
-    while not rospy.is_shutdown():
-        #print(current_state)
-        if current_state is not None and current_state.mode == 'OFFBOARD':
-            
-            if current_pose is not None:
-                #print("hover initiate")
-                publish_uav_position(uav_id, current_pose.pose.position)
-    
-        rate.sleep() 
+
+def handle_hover(uav_id, duration=200):
+    """Hover the UAV at the current position for a specified duration"""
+    rate = rospy.Rate(20)  # 20 Hz update rate
+
+    for _ in range(duration):
+        current_pose = rospy.wait_for_message('/uav' + str(uav_id) + '/mavros/local_position/pose', PoseStamped)
+        hover_position = current_pose.pose.position
+        rospy.loginfo("Published UAV position: " + str(take_off_position))
+        publish_uav_position(uav_id, hover_position)
+        rate.sleep()
+
+
 
 def handle_rendezvous_goal(uav_id, goal_position):
     """Handle the logic for rendezvous goals"""
@@ -220,10 +218,14 @@ def handle_rendezvous_goal(uav_id, goal_position):
     while not rospy.is_shutdown():
         if rospy.get_param('/ugv_goal_reached'):
             rospy.loginfo("UGV reached the rendezvous point")
-            break
+            takeoff(uav_id,0.5)
+            takeoff(uav_id,1)
         else:
             publish_uav_position(uav_id, goal_position)
             rospy.sleep(0.5)
+
+    # takeoff(uav_id, goal_position.z-1)
+    # takeoff(uav_id, goal_position.z)
 
     while not rospy.is_shutdown() and not rospy.get_param('/ugv_goal_reached'):
         rospy.loginfo("UAV %d hovering at the rendezvous point...", uav_id)

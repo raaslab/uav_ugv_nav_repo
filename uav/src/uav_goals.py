@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from geometry_msgs.msg import Point
 from transformation import apply_transform
-FLIGHT_ALTITUDE=2
+FLIGHT_ALTITUDE=1.5
 def parse_uav_goals(file_path):
     goals = []
     with open(file_path, 'r') as file:
