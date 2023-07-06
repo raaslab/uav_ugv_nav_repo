@@ -1,0 +1,7 @@
+goal_radius: 0.4
+home_pos_alt: 2
+ros_update_rate: 20
+take_off_alt: 2
+take_off_radius: 0.1
+landing_radius: 0.1
+ros_sleep_time: 0.5
