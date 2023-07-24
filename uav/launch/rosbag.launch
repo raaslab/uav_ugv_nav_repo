@@ -1,5 +1,5 @@
 <launch>
   <node pkg="rosbag" type="record" name="record" output="screen"
-        args="-o /mnt/sdcard/test.bag /uav1/mavros/local_position/pose /uav1/mav
- /uav1/mavros/state "/>
+        args="-o  /uav2/mavros/local_position/pose /uav2/mav
+ /uav2/mavros/state "/>
 </launch>

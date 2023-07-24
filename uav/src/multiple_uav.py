@@ -22,7 +22,7 @@ def uav_goal_callback(msg, uav_id):
     global ugv_goal_status
     goal_status = msg.data
     print("Received goal status:", goal_status)
-    if goal_status == "rendezvous_reached":
+    if goal_status == "rendezvous_reached uav1":
         rospy.set_param('/ugv_goal_reached', True)
         print("UAV", uav_id, "received 'rendezvous_reached' status from UGV")
         ugv_goal_status = True  # Set a global variable to track the UGV's goal status
@@ -210,16 +210,14 @@ def handle_hover(uav_id, duration=200):
 
 def handle_rendezvous_goal(uav_id, goal_position):
     """Handle the logic for rendezvous goals"""
-    publish_uav_goal_status(uav_id, "rendezvous_reached" + str(uav_id))
-    rospy.loginfo("UAV %d published 'rendezvous_reached' status", uav_id)
-    arming(uav_id, True)
-    set_mode(uav_id, "OFFBOARD")
-
     while not rospy.is_shutdown():
         if rospy.get_param('/ugv_goal_reached'):
             rospy.loginfo("UGV reached the rendezvous point")
-            takeoff(uav_id,0.5)
-            takeoff(uav_id,1)
+            takeoff(uav_id,5.0)
+            takeoff(uav_id,2.0)
+            publish_uav_goal_status(uav_id, "rendezvous_reached" + str(uav_id))
+            rospy.loginfo("UAV %d published 'rendezvous_reached' status", uav_id)
+            break
         else:
             publish_uav_position(uav_id, goal_position)
             rospy.sleep(0.5)
@@ -227,10 +225,10 @@ def handle_rendezvous_goal(uav_id, goal_position):
     # takeoff(uav_id, goal_position.z-1)
     # takeoff(uav_id, goal_position.z)
 
-    while not rospy.is_shutdown() and not rospy.get_param('/ugv_goal_reached'):
-        rospy.loginfo("UAV %d hovering at the rendezvous point...", uav_id)
-        publish_uav_position(uav_id, goal_position)
-        rospy.sleep(0.5)
+    # while not rospy.is_shutdown() and not rospy.get_param('/ugv_goal_reached'):
+    #     rospy.loginfo("UAV %d hovering at the rendezvous point...", uav_id)
+    #     publish_uav_position(uav_id, goal_position)
+    #     rospy.sleep(0.5)
 
 
 def main():
