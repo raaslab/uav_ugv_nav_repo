@@ -1,0 +1,12 @@
+<launch>
+
+    <!-- Launch Navigation with Map -->
+    <include file="$(find jackal_navigation)/launch/odom_navigation_demo.launch">
+    </include>
+
+    <!-- Start RVIZ for Localization -->
+    <include file="$(find jackal_navigation)/launch/view_robot.launch">
+        <arg name="config" value="navigation" />
+    </include>
+
+</launch>
